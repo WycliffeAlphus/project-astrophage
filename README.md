@@ -10,16 +10,16 @@ Built on the **iCE40UP5K** (UPduino v3.x) using the fully open-source toolchain:
 
 ```
                     ┌─────────────────────────────┐
-                    │        Master Node           │
-                    │                              │
-  LM393 mic ───────►│ mic_in                       │
-  HC-SR501 PIR ────►│ pir_in    iCE40UP5K          │──► speaker_out → piezo (local)
-  Reset button ────►│ rst_n                        │
-                    │           heartbeat (1Hz)    │──► rf_tx → FS1000A 433MHz TX
-                    │           PRNG (LFSR)        │
-                    │           PWM (17–18kHz)     │──► uart_tx → GSM (Phase 4)
-                    │           UART (stub)        │
-                    │                              │──► RGB LED (heartbeat blink)
+                    │        Master Node          │
+                    │                             │
+  LM393 mic ───────►│ mic_in                      │
+  HC-SR501 PIR ────►│ pir_in    iCE40UP5K         │──► speaker_out → piezo (local)
+  Reset button ────►│ rst_n                       │
+                    │           heartbeat (1Hz)   │──► rf_tx → FS1000A 433MHz TX
+                    │           PRNG (LFSR)       │
+                    │           PWM (17–18kHz)    │──► uart_tx → GSM (Phase 4)
+                    │           UART (stub)       │
+                    │                             │──► RGB LED (heartbeat blink)
                     └─────────────────────────────┘
                                   │ 433MHz
               ┌───────────────────┼───────────────────┐
