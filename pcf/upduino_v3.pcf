@@ -1,0 +1,20 @@
+# UPduino v3.x Physical Constraints File
+# Maps Verilog port names → iCE40UP5K SG48 package ball numbers
+#
+# IMPORTANT: These are chip ball numbers (1–48), NOT the header label
+# numbers printed on your UPduino board. See docs/hardware_wiring.md
+# for the header-label → ball-number lookup table.
+#
+# The RGB LED (led_r, led_g, led_b) is driven by SB_RGBA_DRV hard macro
+# in sonic_shield_board.v. Those connections are internal to the chip
+# package and do NOT need set_io entries here.
+
+# --- Inputs ---
+set_io rst_n       34   # Active-low reset — pull up to 3.3V externally
+set_io mic_in      23   # Microphone comparator digital output (LM393 DO)
+set_io pir_in      25   # PIR sensor digital output
+
+# --- Outputs ---
+set_io speaker_out 26   # PWM to NPN transistor base (via 1kΩ) → master node piezo
+set_io rf_tx       31   # HIGH=deterrent active → FS1000A DATA pin → wireless satellites
+set_io uart_tx     28   # 115200 8N1 TX — to GSM module RX (Phase 4)
