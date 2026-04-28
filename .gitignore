@@ -1,0 +1,9 @@
+# Build artifacts
+build/
+*.json
+*.asc
+*.bin
+
+# Simulation artifacts
+sim/*.vcd
+sim/*.vvp
