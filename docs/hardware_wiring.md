@@ -51,20 +51,19 @@ The 433MHz link carries a simple binary signal:
 `speaker_out` (FPGA pin 26) drives the local master node piezo via a 2N2222:
 
 ```
-FPGA pin 26 (speaker_out)
-        │
-       [1kΩ]
-        │
-       Base (2N2222)
-      /
-Collector ──────┬──── Piezo (+)
-                │
-              [1N4148]  anode toward collector, cathode toward battery
-                │
-             12V Battery (+)
-                           │
-Emitter ─────────────── GND
-        Piezo (−) ──── GND
+        12V (+)
+           │
+        Piezo (+)
+        Piezo (−) ─────────────────────────────┐
+                                               │
+        12V (+) ──[cathode]─[1N4148]─[anode]──┤  ← flyback clamp
+                                               │
+                                          Collector
+                                          2N2222 NPN
+        FPGA pin 26 ──[1kΩ]──────────── Base
+                                          Emitter
+                                               │
+                                              GND
 ```
 
 ---
@@ -104,22 +103,27 @@ To get closer to 18kHz, use R1=2.2kΩ, R2=2.2kΩ, C=10nF:
 Fine-tune with a trimmer pot (5kΩ) in place of R2 to dial in 17–18kHz.
 
 ```
-12V Battery (+)
+   12V (+)
       │
-    [VCC pin 8]──[pin 4 RESET]
-      │                │
-    [R1=2.2kΩ]         │ (tie reset HIGH = always enabled)
-      │
-    [pin 7 DISCHARGE]
-      │
-    [R2 = 5kΩ trimmer]
-      │
-    [pin 6 THRESHOLD]──[pin 2 TRIGGER]──[C=10nF]──GND
-      │
-    [pin 3 OUTPUT] ──── to transistor base (via 1kΩ)
-                                  │
-    [pin 1 GND] ── GND         Transistor → Piezo → 12V
-                                              (same driver circuit as master)
+      ├──────────────────────── pin 8 (VCC)
+      │                              │
+      │                        [R1 = 2.2kΩ]
+      │                              │
+      │                        pin 7 (DISCHARGE)
+      │                              │
+      │                        [R2 = 5kΩ trimmer]
+      │                              │
+      │                    ┌──── pin 6 (THRESHOLD)
+      │                    │    pin 2 (TRIGGER)
+      │                    │         │
+      │                 [C = 10nF]   │
+      │                    │         │
+     GND ──────────────────┴─────────┘
+
+   pin 4 (RESET) ─── 12V (tie HIGH = always enabled in standalone test)
+                      └── XY-MK-5V DATA in satellite (see below)
+   pin 1 (GND)  ─── GND
+   pin 3 (OUT)  ──[1kΩ]── 2N2222 Base → Piezo driver (same circuit as master)
 ```
 
 ### Gating the 555 with the 433MHz Receiver
@@ -135,21 +139,26 @@ When DATA=LOW → 555 held in reset → output LOW → silence.
 
 **Full satellite schematic:**
 ```
-12V Battery (+)
-    │
-    ├── XY-MK-5V VCC (5V via regulator)
-    └── 555 pin 8 (VCC)
+   12V (+)
+      │
+      ├──[5V regulator]────── XY-MK-5V VCC
+      │                       XY-MK-5V GND ─── GND
+      │                       XY-MK-5V DATA ── 555 pin 4 (RESET)
+      │
+      ├────────────────────── 555 pin 8 (VCC)   ← 555 oscillator
+      │                            │                (R1/R2/C as above)
+      │                       555 pin 3 (OUT)
+      │                            │
+      │                          [1kΩ]
+      │                            │
+      │                        2N2222 Base
+      │                        2N2222 Collector ────── Piezo (−)
+      │
+      └───────────────────────────────────────── Piezo (+)
 
-XY-MK-5V DATA ── 555 pin 4 (RESET)
-
-555 oscillator (as above) ── [1kΩ] ── 2N2222 base
-                                            │
-                                       Collector ──[1N4148]── 12V (+)
-                                                         │
-                                                    Piezo (+)
-                                       Emitter ─── GND
-                                                    │
-                                              Piezo (−)
+   12V (+) ──[cathode]─[1N4148]─[anode]──── Piezo (−) / Collector  ← flyback
+   2N2222 Emitter ─── GND
+   Piezo GND (−) implicitly via Collector → Emitter → GND when transistor ON
 ```
 
 **Antenna on XY-MK-5V:** Solder a 17.3cm wire to the ANT pin. Required for reliable range across the field.
@@ -206,21 +215,17 @@ No button? Tie pin 34 directly to 3.3V.
 ## Field Layout (1-Acre Plot, Wireless)
 
 ```
-    Satellite A              Satellite B
-    (NW corner)              (NE corner)
-         *                        *
-         |  )))  433MHz  (((  |
-         |                        |
-         +──────────────────────-+
-                  [Master]
-                  Node (center)
-                  FS1000A TX
-         +──────────────────────-+
-         |                        |
-         |  )))  433MHz  (((  |
-         *                        *
-    Satellite C              Satellite D
-    (SW corner)              (SE corner)
+  Satellite A (NW) ──────────────────────── Satellite B (NE)
+        [*]          )))  433MHz  (((            [*]
+         │                                        │
+         │               ┌──────────┐             │
+         │    )))        │  Master  │       (((   │
+         │               │   Node   │             │
+         │               │ FS1000A  │             │
+         │               └──────────┘             │
+         │                                        │
+        [*]          )))  433MHz  (((            [*]
+  Satellite C (SW) ──────────────────────── Satellite D (SE)
 ```
 
 - Master at plot center, all 4 satellites receive the same 433MHz broadcast simultaneously.
