@@ -42,7 +42,8 @@ pnr: $(JSON)
 	nextpnr-ice40 --up5k --package sg48 \
 	              --json $(JSON)        \
 	              --pcf  $(PCF)         \
-	              --asc  $(ASC)
+	              --asc  $(ASC)         \
+	              --pcf-allow-unconstrained
 
 # Step 3: Pack — produce binary bitstream from routed design
 pack: $(ASC)

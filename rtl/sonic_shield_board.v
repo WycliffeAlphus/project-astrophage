@@ -38,7 +38,7 @@ module sonic_shield_board (
 
     // Core logic
     sonic_shield_top #(
-        .SHADOW_MODE(0) // Set to 1 for first 3 field days (listen-only mode)
+        .SHADOW_MODE(1) // Set to 1 for first 3 field days (listen-only mode)
     ) core (
         .clk        (clk),
         .rst_n      (rst_n),

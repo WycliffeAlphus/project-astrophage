@@ -30,6 +30,7 @@ module sonic_shield_top #(
     wire [15:0] tone_val;
     wire        pwm_out;
     reg         deterrent_en;
+    reg         blink;
 
     // --- Heartbeat: 1Hz tick drives all 1-second state changes ---
     heartbeat hb_inst (
@@ -49,6 +50,12 @@ module sonic_shield_top #(
     // tone_val sweeps 333–353 (18kHz to ~17kHz ceiling, safe for neighbors)
     // lfsr % 21 maps 16-bit value to 0–20 range
     assign tone_val = 16'd333 + (lfsr % 16'd21);
+
+    // --- Blink toggle: flips each 1Hz tick → 0.5s ON / 0.5s OFF ---
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) blink <= 1'b0;
+        else if (tick_1hz) blink <= ~blink;
+    end
 
     // --- Detection: either sensor fires the deterrent ---
     always @(posedge clk or negedge rst_n) begin
@@ -74,8 +81,8 @@ module sonic_shield_top #(
     // We send deterrent_en (not the PWM) — 433MHz modules can't carry 18kHz OOK
     assign rf_tx = (SHADOW_MODE == 1) ? 1'b0 : deterrent_en;
 
-    // Heartbeat tick drives the LED blink (1Hz)
-    assign status_led = tick_1hz;
+    // Blink toggle drives LED at 0.5Hz duty cycle (visible 1Hz blink)
+    assign status_led = blink;
 
     // UART idle high — Phase 4 will replace this with real telemetry
     assign uart_tx = 1'b1;
